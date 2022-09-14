@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "lit"
+version = "0.1.0"
+description = ""
+authors = ["Richard Löwenström <samedii@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.8,<3.11"
+jax = "^0.3.17"
+Pillow = "^9.2.0"
+jaxlib = "^0.3.15"
+flax = "^0.6.0"
+ml-collections = "^0.1.1"
+tensorflow = "^2.9.2"
+pandas = "^1.4.4"
+tqdm = "^4.64.1"
+tensorflow-text = "^2.9.0"
+aqtp = "^0.0.10"
+einops = "^0.4.1"
+
+[tool.poetry.dev-dependencies]
+black = "^22.8.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
