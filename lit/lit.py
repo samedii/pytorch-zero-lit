@@ -1,36 +1,59 @@
 from PIL import Image
 import numpy as np
 import jax
+import tensorflow as tf
+import torch
+import torch.nn as nn
+from jax2torch import jax2torch
+
 from .vit_jax import models
 
-
-import tensorflow as tf
-physical_devices = tf.config.list_physical_devices('GPU') 
+physical_devices = tf.config.list_physical_devices("GPU")
 tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 
+class LiT(nn.Module):
+    def __init__(self, model_name="LiT-B16B"):
+        super().__init__()
+
+        model_names = [
+            name
+            for name in models.model_configs.MODEL_CONFIGS
+            if name.startswith("LiT")
+        ]
+        if model_name not in model_names:
+            raise ValueError(f"Model name should be one of {model_names}")
+
+        self.model = models.get_model(model_name)
+
+        self.lit_variables = self.model.load_variables()
+        self.tokenizer = self.model.get_tokenizer()
+
+        self.image_preprocessing = self.model.get_image_preprocessing()
+
+    # @jax2torch
+    def encode_texts(self, texts):
+        tokens = self.tokenizer(texts)
+        _, ztxt, _ = self.model.apply(self.lit_variables, tokens=tokens)
+        return ztxt
+
+    # @jax2torch
+    def encode_images(self, images):
+        zimg, _, _ = self.model.apply(
+            self.lit_variables, images=self.image_preprocessing(images)
+        )
+        return zimg
+
+    @staticmethod
+    def cosine_similarity(encodings_a, encodings_b):
+        return encodings_a @ encodings_b.T
+
+
 def test_lit():
+    import json
+    from pathlib import Path
 
-    [name for name in models.model_configs.MODEL_CONFIGS if name.startswith("LiT")]
-
-    model_name = "LiT-B16B"
-
-    lit_model = models.get_model(model_name)
-    # Loading the variables from cloud can take a while the first time...
-    lit_variables = lit_model.load_variables()
-    # Creating tokens from freeform text (see next section).
-    tokenizer = lit_model.get_tokenizer()
-    # Resizing images & converting value range to -1..1 (see next section).
-    image_preprocessing = lit_model.get_image_preprocessing()
-    # Preprocessing op for use in tfds pipeline (see last section).
-    pp = lit_model.get_pp()
-
-    # Note that this is a list of images with different shapes, not a four
-    # dimensional tensor.
-    # [image.shape for image in images_list]
-
-    # images = image_preprocessing(images_list)
-    # images.shape, images.min(), images.max()
+    model = LiT()
 
     texts = [
         "itap of a cd player",
@@ -40,31 +63,15 @@ def test_lit():
         "a bad photo of colorful houses",
         "a photo of a cat",
     ]
-    tokens = tokenizer(texts)
-    tokens.shape
 
-    # zimg, ztxt, out = lit_model.apply(lit_variables, images=images, tokens=tokens)
+    text_encodings = model.encode_texts(texts)
 
-    _, ztxt, _ = lit_model.apply(lit_variables, tokens=tokens)
-    ztxt.shape
+    images = [np.array(Image.open("tests/cat.png").convert("RGB"))]
+    image_encodings = model.encode_images(images)
 
-    # JIT-compile image embedding function because there are lots of images.
-    @jax.jit
-    def embed_images(variables, images):
-        zimg, _, _ = lit_model.apply(variables, images=images)
-        return zimg
+    cosine_similarity = model.cosine_similarity(image_encodings, text_encodings)
 
-    images = image_preprocessing([np.array(Image.open("cat.png").convert("RGB"))])
-    print(images.shape, images.min(), images.max())
-
-    zimg = embed_images(lit_variables, images)
-
-    # Compute similarities ...
-    print(zimg.shape, ztxt.shape)
-    sims = zimg @ ztxt.T
-    print(sims.shape)
-    print(sims)
-
-
-if __name__ == "__main__":
-    test_lit()
+    reference_image_encoding = np.array(
+        json.loads(Path("tests/cat_encoding.json").read_text())
+    )
+    assert np.abs(reference_image_encoding - np.array(image_encodings)).max() <= 1e-6
