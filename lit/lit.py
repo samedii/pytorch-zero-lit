@@ -14,6 +14,9 @@ tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 class LiT(nn.Module):
     def __init__(self, model_name="LiT-B16B"):
+        """
+        ["LiT-B16B", "LiT-B16B_2", "LiT-L16L", "LiT-L16S", "LiT-L16Ti"]
+        """
         super().__init__()
 
         model_names = [
@@ -24,6 +27,7 @@ class LiT(nn.Module):
         if model_name not in model_names:
             raise ValueError(f"Model name should be one of {model_names}")
 
+        self.model_name = model_name
         self.model = models.get_model(model_name)
 
         self.lit_variables = self.model.load_variables()
