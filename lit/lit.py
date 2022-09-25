@@ -14,7 +14,7 @@ logging.set_verbosity_error()
 
 
 MODEL_NAMES = {"LiT-B16B_2", "LiT-L16L"}
-S3_BUCKET_URL = "https://s3.wasabisys.com/nextml-model-data/pytorch-lit"
+S3_BUCKET_URL = "https://s3.wasabisys.com/nextml-model-data/pytorch-zero-lit"
 
 
 class LiT(nn.Module):
@@ -28,13 +28,15 @@ class LiT(nn.Module):
             cache_dir (str): Path to the directory where the model is cached.
         """
         super().__init__()
+        cache_dir = Path(cache_dir)
 
         if model_name not in MODEL_NAMES:
             raise ValueError(f"Model name should be one of {MODEL_NAMES}")
 
+        cache_dir.mkdir(exist_ok=True)
         self.model_name = model_name
-        self.image_encoder_path = Path(cache_dir) / f"{model_name}-image-encoder.pt"
-        self.text_encoder_path = Path(cache_dir) / f"{model_name}-text-encoder.onnx"
+        self.image_encoder_path = cache_dir / f"{model_name}-image-encoder.pt"
+        self.text_encoder_path = cache_dir / f"{model_name}-text-encoder.onnx"
 
         if not self.image_encoder_path.exists():
             print(f"Downloading {self.image_encoder_path.stem}...")
