@@ -1,6 +1,6 @@
 [tool.poetry]
-name = "pytorch-lit"
-version = "0.1.0"
+name = "pytorch-zero-lit"
+version = "0.1.1"
 description = "LiT: Zero-Shot Transfer with Locked-image text Tuning"
 authors = ["Richard Löwenström <samedii@gmail.com>"]
 packages = [
@@ -12,15 +12,15 @@ python = "^3.8,<3.11"
 pytorch-lantern = "^0.12.1"
 transformers = "^4.22.1"
 onnxruntime = "^1.12.1"
+opencv-python = "^4.4.0,!=4.6.0.66"
+onnx2torch = "^1.5.3"
 
 [tool.poetry.dev-dependencies]
 black = "^22.8.0"
 ipykernel = "^6.15.3"
 ipywidgets = "^8.0.2"
 pytest = "^7.1.3"
-onnx2torch = "^1.5.3"
 wget = "^3.2"
-opencv-python = "^4.4.0,!=4.6.0.66"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

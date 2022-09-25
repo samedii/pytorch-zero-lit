@@ -1,4 +1,4 @@
-# pytorch-lit
+# pytorch-zero-lit
 
 Converted official JAX models for [LiT: Zero-Shot Transfer with Locked-image text Tuning](https://arxiv.org/pdf/2111.07991v3.pdf)
 to pytorch.
@@ -11,13 +11,13 @@ _JAX -> Tensorflow -> ONNX -> Pytorch._
 ## Install
 
 ```bash
-poetry add pytorch-lit
+poetry add pytorch-zero-lit
 ```
 
 or
 
 ```bash
-pip install pytorch-lit
+pip install pytorch-zero-lit
 ```
 
 ## Usage

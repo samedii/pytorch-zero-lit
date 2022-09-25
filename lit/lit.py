@@ -1,4 +1,3 @@
-from os import truncate
 from typing import List
 from pathlib import Path
 from PIL import Image
@@ -9,7 +8,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from transformers import BertTokenizer, BertModel, logging
 import onnxruntime
-from lantern import Tensor
+from lantern import Tensor, module_device
 
 logging.set_verbosity_error()
 
@@ -71,15 +70,14 @@ class LiT(nn.Module):
 
         self.text_encoder = BertModel.from_pretrained(pretrained_name)
 
+    @property
+    def device(self):
+        return module_device(self)
+
     def tokenize_texts(self, texts: List[str]):
         tokens = self.text_tokenizer(
             texts,
             return_tensors="pt",
-            # sep_token="[MASK]",
-            # mask_token=0,
-            # padding=True,
-            # truncation=True,
-            # max_length=self.n_text_tokens,
         ).input_ids
         return F.pad(tokens, (0, self.n_text_tokens - tokens.shape[1]))
 
@@ -100,7 +98,7 @@ class LiT(nn.Module):
         )
         output_names = ["Identity_1:0"]
         text_encodings = m.run(output_names, dict(inputs=tokens.numpy()))
-        text_encodings = torch.from_numpy(np.array(text_encodings))[0]
+        text_encodings = torch.from_numpy(np.array(text_encodings))[0].to(self.device)
         return text_encodings / text_encodings.norm(dim=1, keepdim=True)
 
     def encode_images(self, images: Tensor.dims("NCHW")) -> Tensor.dims("NK"):
@@ -115,7 +113,9 @@ class LiT(nn.Module):
                 f"Expected images to be of size {self.image_size} but got {images.shape[-2:]}"
             )
 
-        image_encodings = self.image_encoder(images.mul(2).sub(1).permute(0, 2, 3, 1))
+        image_encodings = self.image_encoder(
+            images.mul(2).sub(1).permute(0, 2, 3, 1).to(self.device)
+        )
         return image_encodings / image_encodings.norm(dim=1, keepdim=True)
 
     @staticmethod
@@ -212,11 +212,12 @@ def test_documentation_usage():
     from lit import LiT
     import torchvision.transforms.functional as TF
 
-    model = LiT()
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = LiT().to(device)
 
     images = TF.to_tensor(
         Image.open("tests/cat.png").convert("RGB").resize((224, 224))
-    )[None]
+    )[None].to(device)
     texts = [
         "a photo of a cat",
         "a photo of a dog",
