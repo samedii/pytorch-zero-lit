@@ -1,8 +1,10 @@
 [tool.poetry]
 name = "pytorch-zero-lit"
-version = "0.2.2"
+version = "0.2.3"
 description = "LiT: Zero-Shot Transfer with Locked-image text Tuning"
 authors = ["Richard Löwenström <samedii@gmail.com>"]
+readme = "README.md"
+repository = "https://github.com/samedii/pytorch-zero-lit"
 packages = [
     { include = "lit" },
 ]
