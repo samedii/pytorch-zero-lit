@@ -1473,7 +1473,7 @@ watchdog = ["watchdog"]
 name = "wget"
 version = "3.2"
 description = "pure python download utility"
-category = "dev"
+category = "main"
 optional = false
 python-versions = "*"
 
@@ -1500,7 +1500,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "ea67275cb1123102831c57233194358e4a471a00761135ec34a7a43d3087b04c"
+content-hash = "c872b7f35d25f5e6e8ef9e5602b73780c4ed248f3ede8b108de26f7458925066"
 
 [metadata.files]
 absl-py = []
