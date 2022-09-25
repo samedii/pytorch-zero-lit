@@ -80,6 +80,9 @@ class LiT(nn.Module):
         tokens = self.text_tokenizer(
             texts,
             return_tensors="pt",
+            padding=True,
+            truncation=True,
+            max_length=self.n_text_tokens,
         ).input_ids
         return F.pad(tokens, (0, self.n_text_tokens - tokens.shape[1]))
 
@@ -232,3 +235,25 @@ def test_documentation_usage():
 
     cosine_similarity = model.cosine_similarity(image_encodings, text_encodings)
     assert cosine_similarity[0].argmax() == 0
+
+
+def test_long_text():
+    from lit import LiT
+
+    model = LiT()
+    texts = [
+        "a photo of a cat in a house with a bird and a dog and a fish and a human. this should not crash",
+        "another really long text. a photo of a cat in a house with a bird and a dog and a fish and a human. this should not crash",
+    ]
+    model.encode_texts(texts)
+    tokens = model.tokenize_texts(texts)
+    assert tokens.shape[-1] == model.n_text_tokens
+
+
+def test_padded_tokens():
+    from lit import LiT
+
+    model = LiT()
+    texts = ["a photo of a cat"]
+    tokens = model.tokenize_texts(texts)
+    assert tokens.shape[-1] == model.n_text_tokens
